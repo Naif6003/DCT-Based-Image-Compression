@@ -1,9 +1,10 @@
 public class CS4551_Said {
 	
-	private static int multiple = 8;
-	private static int[] zeros = new int[3];
-	private static int[] originalImageObjRGB = new int[3];
-	private static int[] YCbCr = new int[3];
+	static int multiple = 8;
+	static int[] zeros = new int[3];
+	static int[] originalImageObjRGB = new int[3];
+	static int widthDiff, heightDiff; 
+	
 	/** 
 	 * resize the image if it's not multiple of 8 in W and H.
 	 * if not, the image will be increased with Zeros values. 
@@ -16,9 +17,9 @@ public class CS4551_Said {
 		Image imageObj = new Image(imageName); // reading the image from the command line argu
 		
 		// make sure the image is multiple of 8 in W and H
-		if(imageObj.getW()%multiple != 0 || imageObj.getH()%multiple != 0) {
-			int widthDiff = imageObj.getW()%8;
-			int heightDiff = imageObj.getH()%8;
+		if(imageObj.getW()%multiple != 0 & imageObj.getH()%multiple != 0) {
+			 widthDiff = imageObj.getW()%8;
+			 heightDiff = imageObj.getH()%8;
 			
 			int newW = imageObj.getW()+(multiple-widthDiff);    // resize the image W
 			int newH = imageObj.getH()+(multiple-heightDiff);   // resize the image H
@@ -35,8 +36,7 @@ public class CS4551_Said {
 					} // end of if
 				}  // end of height
 			} // end of width
-			
-			convertFromRGBtoYCbCr(newImageObj);   // if we resized the original image. (newImageObj)
+			convertFromRGBtoYCbCr(newImageObj); // if we resized the original image. (newImageObj)
 		}else { 
 			convertFromRGBtoYCbCr(imageObj);          // if we didn't resize the original image (imageObj)
 		} // resize image (if)
@@ -70,9 +70,10 @@ public class CS4551_Said {
 			
 			flag = false;
 			extractYCbCrValues(image,flag);    				// apply  inverseDCT
-			supersample(image); 								// get back the RGB values from YCbCr values. (Supersample)
+			supersample(image);							 // get back the RGB values from YCbCr values. (Supersample)
+			Image finalImage = reshapeToTheOriginalImageSize(image);
 			
-			image.display();
+			finalImage.display();
 		} 												// end convertFromRGBtoYCbCr
 		
 		/**
@@ -82,22 +83,23 @@ public class CS4551_Said {
 		 * @return YCbCr array values 
 		 */
 		 static int[] calculateYCbCr(int[] rgb) {
-			double[][] matrixValues = { {0.2990, 0.5870, 0.1140 },
+			
+			 int[] newYCbCr = new int[3];
+			 double[][] matrixValues = { {0.2990, 0.5870, 0.1140 },
 				    					{-0.1687, -0.3313, 0.5000},
 				    					{0.5000, -0.4187, -0.0813}
 				    												};
-			    
 			
-			YCbCr[0] = (int) (matrixValues[0][0] * rgb[0] + matrixValues[0][1] * rgb[1] + matrixValues[0][2] * rgb[2]);
-			YCbCr[1] = (int) (matrixValues[1][0] * rgb[0] + matrixValues[1][1] * rgb[1] + matrixValues[1][2] * rgb[2]);
-			YCbCr[2] = (int) (matrixValues[2][0] * rgb[0] + matrixValues[2][1] * rgb[1] + matrixValues[2][2] * rgb[2]);
+			newYCbCr[0] = (int) (matrixValues[0][0] * rgb[0] + matrixValues[0][1] * rgb[1] + matrixValues[0][2] * rgb[2]);
+			newYCbCr[1] = (int) (matrixValues[1][0] * rgb[0] + matrixValues[1][1] * rgb[1] + matrixValues[1][2] * rgb[2]);
+			newYCbCr[2] = (int) (matrixValues[2][0] * rgb[0] + matrixValues[2][1] * rgb[1] + matrixValues[2][2] * rgb[2]);
 			
 			// Subtract 128 from Y and 0.5 form Cb and Cr to make all of them in the range of [-128,127]						
-			YCbCr[0] -= 128;   // Y
-			YCbCr[1] -= 0.5;   // Cb 
-			YCbCr[2] -= 0.5;   // Cr
+			newYCbCr[0] -= 128;   // Y
+			newYCbCr[1] -= 0.5;   // Cb 
+			newYCbCr[2] -= 0.5;   // Cr
 			
-			return YCbCr; 
+			return newYCbCr; 
 		} // end function calculateYCbCr
 
 		
@@ -148,22 +150,22 @@ public class CS4551_Said {
 		static void extractYCbCrValues(Image image, boolean flag) {
 			
 			// Initialization
-			int height,width=0, h, w;
-			double[][] Y2dvalues = new double[image.getH()][image.getW()];
-			double[][] Cd2dvalues = new double[image.getH()][image.getW()];
-			double[][] Cr2dvalues = new double[image.getH()][image.getW()];
+			int height,width, h, w;
+			double[][] Y2dvalues = new double[image.getW()][image.getH()];
+			double[][] Cd2dvalues = new double[image.getW()][image.getH()];
+			double[][] Cr2dvalues = new double[image.getW()][image.getH()];
 			int[] YCbCrpixels = new int[3];
-			double[][] newY2dvalues = new double[image.getH()][image.getW()];
-			double[][] newCb2dvalues = new double[image.getH()][image.getW()];
-			double[][] newCr2dvalues = new double[image.getH()][image.getW()];
+			double[][] newY2dvalues = new double[image.getW()][image.getH()];
+			double[][] newCb2dvalues = new double[image.getW()][image.getH()];
+			double[][] newCr2dvalues = new double[image.getW()][image.getH()];
 			
 			// extract the pixels values from the image Y, Cb , Cr
-			for(height=0; height<image.getH(); height++) {
-					for(width=0;width<image.getW();width++) {
+			for(width=0; width<image.getW(); width++) {
+					for(height=0;height<image.getH();height++) {
 						image.getPixel(width, height, YCbCrpixels);
-								Y2dvalues[height][width] = YCbCrpixels[0];
-								Cd2dvalues[height][width] = YCbCrpixels[1];
-								Cr2dvalues[height][width] = YCbCrpixels[2];
+								Y2dvalues[width][height] = YCbCrpixels[0];
+								Cd2dvalues[width][height] = YCbCrpixels[1];
+								Cr2dvalues[width][height] = YCbCrpixels[2];
 					}
 				}
 			
@@ -178,15 +180,15 @@ public class CS4551_Said {
 				newCb2dvalues = applyInverseDCT(Cd2dvalues,image);
 				newCr2dvalues = applyInverseDCT(Cr2dvalues,image);
 			}			
-			
+	
 			
 //		 	Return the new values to the original image. 
-			for(height=0; height<image.getH(); height++) {
-					for(width=0;width<image.getW();width++) {
+			for(width=0; width<image.getW(); width++) {
+					for(height=0;height<image.getH();height++) {
 						image.getPixel(width, height, YCbCrpixels);
-								YCbCrpixels[0] = (int) newY2dvalues[height][width];
-								YCbCrpixels[1] = (int) newCb2dvalues[height][width];
-								YCbCrpixels[2] = (int) newCr2dvalues[height][width];
+								YCbCrpixels[0] = (int) newY2dvalues[width][height];
+								YCbCrpixels[1] = (int) newCb2dvalues[width][height];
+								YCbCrpixels[2] = (int) newCr2dvalues[width][height];
 						image.setPixel(width, height, YCbCrpixels);
 					}
 				}
@@ -211,7 +213,7 @@ public class CS4551_Said {
 					
 					for(height=startH; height<startH+8;height++) {			// 0 - 7, 8 - 15, 16 - 23 . . .
 						for(width=startW; width<startW+8;width++) {
-							arr8x8forDCT[h][w++] = YCbCrValues[height][width];
+							arr8x8forDCT[w++][h] = YCbCrValues[width][height];
 						}	// end width
 						h++;
 						w=0;
@@ -226,7 +228,7 @@ public class CS4551_Said {
 							// replace with the new values after DCT 
 							for(height=startH; height<startH+8;height++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
 								for(width=startW; width<startW+8;width++) {
-									YCbCrValues[height][width] = newYCbCrvalues[h][w++];
+									YCbCrValues[width][height] = newYCbCrvalues[w++][h];
 								}	// end width
 								w=0;
 								h++;
@@ -265,7 +267,7 @@ public class CS4551_Said {
 								
 								for(height=startH; height<startH+8;height++) {			// 0 - 7, 8 - 15, 16 - 23 . . .
 									for(width=startW; width<startW+8;width++) {
-										arr8x8forDCT[h][w++] = YCbCrValues[height][width];
+										arr8x8forDCT[w++][h] = YCbCrValues[width][height];				// get 8x8 2D arry from the original image.
 									}	// end width
 									h++;
 									w=0;
@@ -274,13 +276,13 @@ public class CS4551_Said {
 								
 									// apply DCT to 8x8 2D array.
 									DCT.GFG dctObj = new DCT.GFG();
-									double[][] newYCbCrvalues = dctObj.inverseDCT(arr8x8forDCT);
+									double[][] newYCbCrvalues = dctObj.inverseDCT(arr8x8forDCT);        // apply InverseDCT on the 8x8 2D array
 									h=0;w=0;
-									System.out.println(startH + " this is startH ");
+									
 										// replace with the new values after DCT 
 										for(height=startH; height<startH+8;height++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
 											for(width=startW; width<startW+8;width++) {
-												YCbCrValues[height][width] = newYCbCrvalues[h][w++];
+												YCbCrValues[width][height] = newYCbCrvalues[w++][h];  			// assign the new values back to the image.
 											}	// end width
 											w=0;
 											h++;
@@ -359,6 +361,28 @@ public class CS4551_Said {
 			
 			return rgbValues;
 		}  // calculateSupersample ends
+		
+		
+		static Image reshapeToTheOriginalImageSize(Image image) {
+			//Initialization
+			int originalW, originalH;
+			originalW = multiple-widthDiff;
+			originalH = multiple-heightDiff;
+			Image newImage = new Image(image.getW()-originalW,image.getH()-originalH);
+			int width, height;
+			int[] rgb = new int[3];
+			
+			
+			for(width=0;width<newImage.getW();width++) {
+				for(height=0;height<newImage.getH();height++) {
+					image.getPixel(width, height, rgb);
+					newImage.setPixel(width, height, rgb);
+				}
+			}
+			
+			return newImage;
+		}
+		
 		
 	public static void main(String[] args) {
 		readandresizetheimage(args[0]);
