@@ -369,6 +369,11 @@ public class CS4551_Said {
 		}  // calculateSupersample ends
 		
 		
+		/**
+		 * 
+		 * @param image
+		 * @return newImage with original size
+		 */
 		static Image reshapeToTheOriginalImageSize(Image image) {
 			//Initialization
 			int originalW, originalH;
