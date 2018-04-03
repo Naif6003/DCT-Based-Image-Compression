@@ -64,13 +64,13 @@ public class CS4551_Said {
 			// #######################  calling the functioin for Subsampling and applying DCT on the image. ######################### 
 			
 			subsample(image);   						// apply subsampling on it
-			extractYCbCrValues(image,flag);    				// applyDCT 
+			extractYCbCrValuesAndApplyDCT(image,flag);    				// applyDCT 
 			
 			// ####################### apply the reverse functions on image ############################
-			
+		
 			flag = false;
-			extractYCbCrValues(image,flag);    				// apply  inverseDCT
-			supersample(image);							 // get back the RGB values from YCbCr values. (Supersample)
+			extractYCbCrValuesAndApplyDCT(image,flag);    		 		// apply  inverseDCT
+			supersample(image);											 // get back the RGB values from YCbCr values. (Supersample)
 			Image finalImage = reshapeToTheOriginalImageSize(image);
 			
 			finalImage.display();
@@ -105,30 +105,31 @@ public class CS4551_Said {
 		
 		
 		/**
-		 * 	apply subsample 4:2:0 algorithm and show the image. 
+		 * apply subsample 4:2:0 algorithm and show the image.
 		 * 
-		 * @param YCbCr
-		 * 
+		 * @param Image image
 		 */
 		 static void subsample(Image image) {
-			
+			// Initialization
 			int[] YCbCrcolor = new int[3];
 			int[] YCbCr = new int[3];
+			
+			
 			for(int width=0; width<image.getW(); width+=2) {
-				for(int height=0; height<image.getH(); height+=2) {
+				for(int height=0; height<image.getH(); height+=4) {
 					image.getPixel(width, height, YCbCrcolor);
 					
 					if(height+1 < image.getH())
-						image.getPixel(width+1, height, YCbCr);
-						YCbCr[1] = YCbCrcolor[1];
-						YCbCr[2] = YCbCrcolor[2];
-						image.getPixel(width+1, height, YCbCr);
-					
-					if(height+1 <image.getW())
 						image.getPixel(width, height+1, YCbCr);
 						YCbCr[1] = YCbCrcolor[1];
 						YCbCr[2] = YCbCrcolor[2];
-						image.setPixel(width, height+1, YCbCr);
+						image.getPixel(width, height+1, YCbCr);
+					
+					if(width+1 <image.getW())
+						image.getPixel(width+1, height, YCbCr);
+						YCbCr[1] = YCbCrcolor[1];
+						YCbCr[2] = YCbCrcolor[2];
+						image.setPixel(width+1, height, YCbCr);
 						
 					if(height+1 < image.getH() && width+1 < image.getW())
 						image.getPixel(width+1, height+1, YCbCr);
@@ -144,10 +145,12 @@ public class CS4551_Said {
 		
 		/**
 		 *  This method will create a 2D array for each Y, Cb, Cr 
+		 *  then apply DCT or InverseDCT
+		 *  
 		 * @param image
 		 * @return Image object after applying DCT
 		 */
-		static void extractYCbCrValues(Image image, boolean flag) {
+		static void extractYCbCrValuesAndApplyDCT(Image image, boolean flag) {
 			
 			// Initialization
 			int height,width, h, w;
@@ -208,11 +211,11 @@ public class CS4551_Said {
 			double[][] arr8x8forDCT = new double[8][8];
 			
 			
-			while(rounds >= 0) {   // the number of 8x8 2D arrays in the image HxW size 
+			while(rounds > 0) {   // the number of 8x8 2D arrays in the image HxW size 
 				while(startW+8 <= image.getW() && startH+8 <= image.getH()) {   // till we reach the Width of the image.
 					
-					for(height=startH; height<startH+8;height++) {			// 0 - 7, 8 - 15, 16 - 23 . . .
-						for(width=startW; width<startW+8;width++) {
+					for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
+						for(height=startH; height<startH+8;height++) {
 							arr8x8forDCT[w++][h] = YCbCrValues[width][height];
 						}	// end width
 						h++;
@@ -226,8 +229,8 @@ public class CS4551_Said {
 						h=0;w=0;
 						
 							// replace with the new values after DCT 
-							for(height=startH; height<startH+8;height++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
-								for(width=startW; width<startW+8;width++) {
+						for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
+							for(height=startH; height<startH+8;height++) {
 									YCbCrValues[width][height] = newYCbCrvalues[w++][h];
 								}	// end width
 								w=0;
@@ -235,12 +238,12 @@ public class CS4551_Said {
 							} // end height
 						
 						h=0;
-						startW+=8;
+						startH+=8;
 				} // inner while
 				
-			startH+=8;
-			startW=0;
-			rounds--;
+				startW+=8;
+				startH=0;
+				rounds--;
 			} // rounds 
 			
 			
@@ -262,12 +265,12 @@ public class CS4551_Said {
 						double[][] arr8x8forDCT = new double[8][8];
 						
 						
-						while(rounds >= 0) {   // the number of 8x8 2D arrays in the image HxW size 
+						while(rounds > 0) {   // the number of 8x8 2D arrays in the image HxW size 
 							while(startW+8 <= image.getW() && startH+8 <= image.getH()) {   // till we reach the Width of the image.
 								
-								for(height=startH; height<startH+8;height++) {			// 0 - 7, 8 - 15, 16 - 23 . . .
-									for(width=startW; width<startW+8;width++) {
-										arr8x8forDCT[w++][h] = YCbCrValues[width][height];				// get 8x8 2D arry from the original image.
+								for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
+									for(height=startH; height<startH+8;height++) {
+										arr8x8forDCT[w++][h] = YCbCrValues[width][height];
 									}	// end width
 									h++;
 									w=0;
@@ -276,30 +279,28 @@ public class CS4551_Said {
 								
 									// apply DCT to 8x8 2D array.
 									DCT.GFG dctObj = new DCT.GFG();
-									double[][] newYCbCrvalues = dctObj.inverseDCT(arr8x8forDCT);        // apply InverseDCT on the 8x8 2D array
+									double[][] newYCbCrvalues = dctObj.inverseDCT(arr8x8forDCT);
 									h=0;w=0;
 									
 										// replace with the new values after DCT 
-										for(height=startH; height<startH+8;height++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
-											for(width=startW; width<startW+8;width++) {
-												YCbCrValues[width][height] = newYCbCrvalues[w++][h];  			// assign the new values back to the image.
+									for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
+										for(height=startH; height<startH+8;height++) {
+												YCbCrValues[width][height] = newYCbCrvalues[w++][h];
 											}	// end width
 											w=0;
 											h++;
 										} // end height
 									
 									h=0;
-									startW+=8;
+									startH+=8;
 							} // inner while
 							
-						startH+=8;
-						startW=0;
-						rounds--;
+							startW+=8;
+							startH=0;
+							rounds--;
 						} // rounds 
-			
-			
-			
-			
+						
+						
 			return YCbCrValues;
 		}
 		
@@ -354,9 +355,14 @@ public class CS4551_Said {
 			rgbValues[1] = (int) (matrixValues[1][0] * YCbCrValues[0] + matrixValues[1][1] * YCbCrValues[1] + matrixValues[1][2] * YCbCrValues[2]);
 			rgbValues[2] = (int) (matrixValues[2][0] * YCbCrValues[0] + matrixValues[2][1] * YCbCrValues[1] + matrixValues[2][2] * YCbCrValues[2]);
 			
+			
 			if(rgbValues[0] > 255) rgbValues[0]=255;
 			if(rgbValues[1] > 255) rgbValues[1]=255;
 			if(rgbValues[2] > 255) rgbValues[2]=255;
+			if(rgbValues[0] < 0) rgbValues[0]=0;
+			if(rgbValues[1] < 0) rgbValues[1]=0;
+			if(rgbValues[2] < 0) rgbValues[2]=0;
+			
 			
 			
 			return rgbValues;
