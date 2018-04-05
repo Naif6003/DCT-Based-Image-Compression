@@ -81,6 +81,14 @@ public class Image{
 	setPixel(x,y,rgb);
   }
   
+  public void setPixel(int x, int y, float[] irgb){
+		byte[] rgb = new byte[3];
+
+		for(int i=0;i<3;i++)
+		  rgb[i] = (byte) irgb[i];
+
+		setPixel(x,y,rgb);
+	  }
   
   
   //######################################################## GET PIXEL  ##########################################
@@ -107,7 +115,18 @@ public class Image{
 	rgb[2]= (int) (0xFF & b);
   }
 
-  
+  public void getPixel(int x, int y, float[] rgb){
+		int pix = img.getRGB(x,y);
+
+		byte b = (byte) pix;
+		byte g = (byte)(pix>>8);
+		byte r = (byte)(pix>>16);
+
+	    // converts singed byte value (~128-127) to unsigned byte value (0~255)
+		rgb[0]= (int) (0xFF & r);
+		rgb[1]= (int) (0xFF & g);
+		rgb[2]= (int) (0xFF & b);
+	  }
   
   // Display rgb pixel in unsigned byte value (0~255)
   public void displayPixelValue(int x, int y){

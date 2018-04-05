@@ -50,98 +50,218 @@ public class CS4551_Said {
 			
 			 // Initialization
 			 boolean flag = true;
+			float[] rgb = new float[3];
 			
-			int[] rgb = new int[3];
-			for(int width=0; width<image.getW(); width++){    		// loop over all the pixels in the image.
+			
+			for(int width=0; width<image.getW(); width++){    		
 				for(int height=0; height<image.getH(); height++) {
 					image.getPixel(width, height, rgb);  
-					int[] newYCbCr = calculateYCbCr(rgb);       // Find the YCbCr values.
+					float[] newYCbCr = calculatesubsampleYCbCr(rgb);// Find the YCbCr values.
 					image.setPixel(width, height, newYCbCr);
 				} 
 			} // end for loop
 			
 			
-			// #######################  calling the functioin for Subsampling and applying DCT on the image. ######################### 
+// #######################  calling the functioin for Subsampling and applying DCT on the image. ######################### 
 			
-			subsample(image);   						// apply subsampling on it
+			subsample(image);   						       			// apply subsampling on it
 			extractYCbCrValuesAndApplyDCT(image,flag);    				// applyDCT 
 			
-			// ####################### apply the reverse functions on image ############################
+// ####################### apply the reverse functions on image ############################
 		
 			flag = false;
-			extractYCbCrValuesAndApplyDCT(image,flag);    		 		// apply  inverseDCT
-			supersample(image);											 // get back the RGB values from YCbCr values. (Supersample)
+			extractYCbCrValuesAndApplyDCT(image,flag);    		    		// apply  inverseDCT
+			supersample(image);										   	 // get back the RGB values from YCbCr values. (Supersample)
+			
+			float[] ycbcr = new float[3];
+			for(int width=0; width<image.getW(); width++){    		
+				for(int height=0; height<image.getH(); height++) {
+					image.getPixel(width, height, ycbcr);  
+					float[] rgbAfterYCbCr = calculateSupersample(ycbcr); 				// Find the YCbCr values.
+					image.setPixel(width, height, rgbAfterYCbCr);
+				} 
+			} // end for loop
+			
+			
 			Image finalImage = reshapeToTheOriginalImageSize(image);
 			
 			finalImage.display();
 		} 												// end convertFromRGBtoYCbCr
-		
-		/**
-		 * Apply the equations to find the values for [Y][Cb][Cr]
-		 * 
-		 * @param rgb array values
-		 * @return YCbCr array values 
-		 */
-		 static int[] calculateYCbCr(int[] rgb) {
-			
-			 int[] newYCbCr = new int[3];
-			 double[][] matrixValues = { {0.2990, 0.5870, 0.1140 },
-				    					{-0.1687, -0.3313, 0.5000},
-				    					{0.5000, -0.4187, -0.0813}
-				    												};
-			
-			newYCbCr[0] = (int) (matrixValues[0][0] * rgb[0] + matrixValues[0][1] * rgb[1] + matrixValues[0][2] * rgb[2]);
-			newYCbCr[1] = (int) (matrixValues[1][0] * rgb[0] + matrixValues[1][1] * rgb[1] + matrixValues[1][2] * rgb[2]);
-			newYCbCr[2] = (int) (matrixValues[2][0] * rgb[0] + matrixValues[2][1] * rgb[1] + matrixValues[2][2] * rgb[2]);
-			
-			// Subtract 128 from Y and 0.5 form Cb and Cr to make all of them in the range of [-128,127]						
-			newYCbCr[0] -= 128;   // Y
-			newYCbCr[1] -= 0.5;   // Cb 
-			newYCbCr[2] -= 0.5;   // Cr
-			
-			return newYCbCr; 
-		} // end function calculateYCbCr
 
 		
-		
-		/**
-		 * apply subsample 4:2:0 algorithm and show the image.
-		 * 
-		 * @param Image image
-		 */
-		 static void subsample(Image image) {
-			// Initialization
-			int[] YCbCrcolor = new int[3];
-			int[] YCbCr = new int[3];
-			
-			
-			for(int width=0; width<image.getW(); width+=2) {
-				for(int height=0; height<image.getH(); height+=4) {
-					image.getPixel(width, height, YCbCrcolor);
+		 /**
+			 * Apply the equations to find the values for [Y][Cb][Cr]
+			 * 
+			 * @param rgb array values
+			 * @return YCbCr array values 
+			 */
+			 static float[] calculatesubsampleYCbCr(float[] rgb) {
+				 
+				 // Initialization 
+				 float[] newYCbCr = new float[3];
+				 double[][] matrixValues = { {0.2990, 0.5870, 0.1140 },
+					    					{-0.1687, -0.3313, 0.5000},
+					    					{0.5000, -0.4187, -0.0813}};
+				 
 					
-					if(height+1 < image.getH())
-						image.getPixel(width, height+1, YCbCr);
-						YCbCr[1] = YCbCrcolor[1];
-						YCbCr[2] = YCbCrcolor[2];
-						image.getPixel(width, height+1, YCbCr);
+				newYCbCr[0] = (float) (matrixValues[0][0] * rgb[0] + matrixValues[0][1] * rgb[1] + matrixValues[0][2] * rgb[2]);
+				newYCbCr[2] = (float) (matrixValues[1][0] * rgb[0] + matrixValues[1][1] * rgb[1] + matrixValues[1][2] * rgb[2]);
+				newYCbCr[1] = (float) (matrixValues[2][0] * rgb[0] + matrixValues[2][1] * rgb[1] + matrixValues[2][2] * rgb[2]);
+				
+				newYCbCr[0] -= 128; 
+				newYCbCr[1] -= 0.5;
+				newYCbCr[2] -= 0.5;
+				
+//				if(newYCbCr[0] > 255) newYCbCr[0] = 255;
+//				if(newYCbCr[0] < 0) newYCbCr[0] = 0;
+//				
+//				if(newYCbCr[1] > 127.5) newYCbCr[1] = (float) 127.5;
+//				if(newYCbCr[1] < -125.5) newYCbCr[1] = (float) -127.5;
+//				
+//				if(newYCbCr[2] > 127.5) newYCbCr[2] = (float) 127.5;
+//				if(newYCbCr[2] < -125.5) newYCbCr[2] = (float) -127.5;
+				
+				
+//				System.out.println(newYCbCr[2] + " Y ");
+//				System.out.println(newYCbCr[1] + " Cb ");
+//				System.out.println(newYCbCr[2] + " Cr ");
+				
+				return newYCbCr; 
+			} // end function calculateYCbCr
+			 
+			 /**
+				 * apply the equation to convert from YCbCr to RGB
+				 * 
+				 * @param YCbCrValues
+				 * @return RGB values from YCbCr values
+				 */
+				static float[] calculateSupersample(float[] YCbCrValues) {
 					
-					if(width+1 <image.getW())
-						image.getPixel(width+1, height, YCbCr);
-						YCbCr[1] = YCbCrcolor[1];
-						YCbCr[2] = YCbCrcolor[2];
-						image.setPixel(width+1, height, YCbCr);
+					//Initialization
+					float[] rgbValues = new float[3];
+					double[][] matrixValues = {
+												{1.0000 , 0 , 1.4020},
+												{1.0000 , -0.3441 , -0.7141},
+												{1.0000 , 1.7720, 0 }
+											};
+					
+					YCbCrValues[0] += 127;
+					YCbCrValues[1] += 0.5;
+					YCbCrValues[2] += 0.5;
+					
+					rgbValues[0] = (float) (matrixValues[0][0] * YCbCrValues[0] + matrixValues[0][1] * YCbCrValues[1] + matrixValues[0][2] * YCbCrValues[2]);
+					rgbValues[2] = (float) (matrixValues[1][0] * YCbCrValues[0] + matrixValues[1][1] * YCbCrValues[1] + matrixValues[1][2] * YCbCrValues[2]);
+					rgbValues[1] = (float) (matrixValues[2][0] * YCbCrValues[0] + matrixValues[2][1] * YCbCrValues[1] + matrixValues[2][2] * YCbCrValues[2]);
+					
+					
+//						System.out.println(rgbValues[0] + " Y ");
+//						System.out.println(rgbValues[1] + " Cb ");
+//						System.out.println(rgbValues[2] + " Cr ");
+					
+					if(rgbValues[0] > 255) rgbValues[0]=255;
+					if(rgbValues[1] > 255) rgbValues[1]=255;
+					if(rgbValues[2] > 255) rgbValues[2]=255;
+					if(rgbValues[0] < 0) rgbValues[0]=0;
+					if(rgbValues[1] < 0) rgbValues[1]=0;
+					if(rgbValues[2] < 0) rgbValues[2]=0;
+					
+					
+					return rgbValues;
+				}  // calculateSupersample ends
+			 
+		 
+			 /**
+				 * apply subsample 4:2:0 algorithm and show the image.
+				 * 
+				 * @param Image image
+				 */
+				 static void subsample(Image image) {
+					// Initialization
+					float[] YCbCr1 = new float[3];
+					float[] YCbCr2 = new float[3];
+					float[] YCbCr3 = new float[3];
+					float[] YCbCr4 = new float[3];
+					
+					
+					for(int width=0; width<image.getW(); width+=2) {
+						for(int height=0; height<image.getH(); height+=2) {
+							image.getPixel(width, height, YCbCr1);
+							
+							if(height+1 < image.getH())
+								image.getPixel(width, height+1, YCbCr2);
+								
+							if(width+1 <image.getW())
+								image.getPixel(width+1, height, YCbCr3);
+								
+							if(height+1 < image.getH() && width+1 < image.getW())
+								image.getPixel(width+1, height+1, YCbCr4);
+								
+
+							float avrCb = (YCbCr1[1]+YCbCr2[1]+YCbCr3[1]+YCbCr4[1])/4;
+							float avrCr = (YCbCr1[2]+YCbCr2[2]+YCbCr3[2]+YCbCr4[2])/4;
+							
+							YCbCr1[1] = avrCr;
+							YCbCr1[2] = avrCb;
+							
+							image.setPixel(width, height, YCbCr1);
+						} // height
+					} // end width.
+					
+				} // end of subsample function.
+			 
+			 
+			 
+		 /**
+			 *  Applies Supersample algorithm on YCbCr values to get RGB
+			 * @param image
+			 */
+			static void supersample(Image image) {
+				
+				// Initialization
+				int height, width;
+				float[] YCbCr1 = new float[3];
+				float[] YCbCr2 = new float[3];
+				float[] YCbCr3 = new float[3];
+				float[] YCbCr4 = new float[3];
+				
+				
+				for(width=0; width<image.getW(); width+=2) {
+					for(height=0; height<image.getH(); height+=2) {
+						image.getPixel(width, height, YCbCr1);
 						
-					if(height+1 < image.getH() && width+1 < image.getW())
-						image.getPixel(width+1, height+1, YCbCr);
-						YCbCr[1] = YCbCrcolor[1];
-						YCbCr[2] = YCbCrcolor[2];
-						image.setPixel(width+1, height+1, YCbCr);
-
-				} // height
-			} // end width.
+						if(height+1 < image.getH())
+							image.getPixel(width, height+1, YCbCr2);
+							
+						if(width+1 <image.getW())
+							image.getPixel(width+1, height, YCbCr3);
+							
+						if(height+1 < image.getH() && width+1 < image.getW())
+							image.getPixel(width+1, height+1, YCbCr4);
+						
+						YCbCr2[1] = YCbCr1[2];
+						YCbCr2[2] = YCbCr1[1];
+						YCbCr3[1] = YCbCr1[2];
+						YCbCr3[2] = YCbCr1[1];
+						YCbCr4[1] = YCbCr1[2];
+						YCbCr4[2] = YCbCr1[1];
+						
+						
+						if(height+1 < image.getH())
+							image.setPixel(width, height+1, YCbCr2);
+							
+						if(width+1 <image.getW())
+							image.setPixel(width+1, height, YCbCr3);
+							
+						if(height+1 < image.getH() && width+1 < image.getW())
+							image.setPixel(width+1, height+1, YCbCr4);
+						
+						
+						
+					} // height
+				} // end width.
+				
+			} // supersample ends
 			
-		} // end of subsample function.
-		
 		
 		/**
 		 *  This method will create a 2D array for each Y, Cb, Cr 
@@ -153,14 +273,15 @@ public class CS4551_Said {
 		static void extractYCbCrValuesAndApplyDCT(Image image, boolean flag) {
 			
 			// Initialization
-			int height,width, h, w;
-			double[][] Y2dvalues = new double[image.getW()][image.getH()];
-			double[][] Cd2dvalues = new double[image.getW()][image.getH()];
-			double[][] Cr2dvalues = new double[image.getW()][image.getH()];
+			int height,width;
+			float[][] Y2dvalues = new float[image.getW()][image.getH()];
+			float[][] Cd2dvalues = new float[image.getW()][image.getH()];
+			float[][] Cr2dvalues = new float[image.getW()][image.getH()];
 			int[] YCbCrpixels = new int[3];
-			double[][] newY2dvalues = new double[image.getW()][image.getH()];
-			double[][] newCb2dvalues = new double[image.getW()][image.getH()];
-			double[][] newCr2dvalues = new double[image.getW()][image.getH()];
+			float[][] newY2dvalues = new float[image.getW()][image.getH()];
+			float[][] newCb2dvalues = new float[image.getW()][image.getH()];
+			float[][] newCr2dvalues = new float[image.getW()][image.getH()];
+			
 			
 			// extract the pixels values from the image Y, Cb , Cr
 			for(width=0; width<image.getW(); width++) {
@@ -184,14 +305,15 @@ public class CS4551_Said {
 				newCr2dvalues = applyInverseDCT(Cr2dvalues,image);
 			}			
 	
-			
+			width=0;height=0;
 //		 	Return the new values to the original image. 
 			for(width=0; width<image.getW(); width++) {
 					for(height=0;height<image.getH();height++) {
 						image.getPixel(width, height, YCbCrpixels);
 								YCbCrpixels[0] = (int) newY2dvalues[width][height];
-								YCbCrpixels[1] = (int) newCb2dvalues[width][height];
-								YCbCrpixels[2] = (int) newCr2dvalues[width][height];
+								YCbCrpixels[2] = (int) newCb2dvalues[width][height];
+								YCbCrpixels[1] = (int) newCr2dvalues[width][height];
+								
 						image.setPixel(width, height, YCbCrpixels);
 					}
 				}
@@ -204,40 +326,42 @@ public class CS4551_Said {
 		 * @param images 
 		 * @return values of YCbCr after DCT
 		 */
-		static double[][] applyDCT(double[][] YCbCrValues, Image image) {
+		static float[][] applyDCT(float[][] YCbCrValues, Image image) {
 			
 			// Initialization
 			int height, width, startH=0, startW=0, w=0, h=0, rounds=(image.getH()/8)*(image.getW()/8);
-			double[][] arr8x8forDCT = new double[8][8];
+			float[][] arr8x8forDCT = new float[8][8];
 			
 			
-			while(rounds > 0) {   // the number of 8x8 2D arrays in the image HxW size 
-				while(startW+8 <= image.getW() && startH+8 <= image.getH()) {   // till we reach the Width of the image.
+			// start taking 8x8 arrays from the original image
+			while(rounds > 0) {   														// the number of 8x8 2D arrays in the image HxW size 
+				while(startW <  image.getW() && startH < image.getH()) {   // till we reach the Width of the image.
 					
 					for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
 						for(height=startH; height<startH+8;height++) {
-							arr8x8forDCT[w++][h] = YCbCrValues[width][height];
+							arr8x8forDCT[w][h++] = YCbCrValues[width][height];
 						}	// end width
-						h++;
-						w=0;
+						w++;
+						h=0;
 					} // end height 
 					
 					
 						// apply DCT to 8x8 2D array.
 						DCT.GFG dctObj = new DCT.GFG();
-						double[][] newYCbCrvalues = dctObj.dctTransform(arr8x8forDCT);
+						dctObj.dctTransform(arr8x8forDCT);
 						h=0;w=0;
-						
+				        
 							// replace with the new values after DCT 
 						for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
 							for(height=startH; height<startH+8;height++) {
-									YCbCrValues[width][height] = newYCbCrvalues[w++][h];
+									YCbCrValues[width][height] = arr8x8forDCT[w][h++];
 								}	// end width
-								w=0;
-								h++;
+								w++;
+								h=0;
 							} // end height
 						
 						h=0;
+						w=0;
 						startH+=8;
 				} // inner while
 				
@@ -258,40 +382,41 @@ public class CS4551_Said {
 		 * @param image
 		 * @return YCbCr values after the DCT inverse
 		 */
-		static double[][] applyInverseDCT(double[][] YCbCrValues, Image image){
+		static float[][] applyInverseDCT(float[][] YCbCrValues, Image image){
 		
 			// Initialization
 						int height, width, startH=0, startW=0, w=0, h=0, rounds=(image.getH()/8)*(image.getW()/8);
-						double[][] arr8x8forDCT = new double[8][8];
+						float[][] arr8x8forDCT = new float[8][8];
 						
 						
 						while(rounds > 0) {   // the number of 8x8 2D arrays in the image HxW size 
-							while(startW+8 <= image.getW() && startH+8 <= image.getH()) {   // till we reach the Width of the image.
+							while(startW < image.getW() && startH < image.getH()) {   // till we reach the Width of the image.
 								
 								for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
 									for(height=startH; height<startH+8;height++) {
-										arr8x8forDCT[w++][h] = YCbCrValues[width][height];
+										arr8x8forDCT[w][h++] = YCbCrValues[width][height];
 									}	// end width
-									h++;
-									w=0;
+									h=0;
+									w++;
 								} // end height 
 								
 								
 									// apply DCT to 8x8 2D array.
 									DCT.GFG dctObj = new DCT.GFG();
-									double[][] newYCbCrvalues = dctObj.inverseDCT(arr8x8forDCT);
+									dctObj.inverseDCT(arr8x8forDCT);
 									h=0;w=0;
 									
-										// replace with the new values after DCT 
+									// replace with the new values after DCT 
 									for(width=startW; width<startW+8;width++) {		// 0 - 7, 8 - 15, 16 - 23 . . . 
 										for(height=startH; height<startH+8;height++) {
-												YCbCrValues[width][height] = newYCbCrvalues[w++][h];
+												YCbCrValues[width][height] = arr8x8forDCT[w][h++];
 											}	// end width
-											w=0;
-											h++;
+											w++;
+											h=0;
 										} // end height
 									
 									h=0;
+									w=0;
 									startH+=8;
 							} // inner while
 							
@@ -303,70 +428,6 @@ public class CS4551_Said {
 						
 			return YCbCrValues;
 		}
-		
-		
-		
-		/**
-		 *  Applies Supersample algorithm on YCbCr values to get RGB
-		 * @param image
-		 */
-		static void supersample(Image image) {
-			
-			// Initialization
-			int[] YCbCrValues = new int[3];
-			int height, width;
-			
-			// assign the new values to the image
-			for(width=0; width<image.getW(); width++) {
-				for(height=0; height<image.getH(); height++) {
-					image.getPixel(width, height, YCbCrValues);
-					int[] rgb = calculateSupersample(YCbCrValues);
-					image.setPixel(width, height, rgb);
-				}
-			}
-			
-		} // supersample ends
-		
-		
-		
-		
-		/**
-		 * apply the equation to convert from YCbCr to RGB
-		 * 
-		 * @param YCbCrValues
-		 * @return RGB values from YCbCr values
-		 */
-		static int[] calculateSupersample(int[] YCbCrValues) {
-			
-			//Initialization
-			int[] rgbValues = new int[3];
-			double[][] matrixValues = {
-					{1.0000 , 0 , 1.4020},
-					{1.0000 , -0.3441 , -0.7141},
-					{1.0000 , 1.7720, 0 }
-			};
-			
-			
-			YCbCrValues[0] += 128;
-			YCbCrValues[1] += 0.5;
-			YCbCrValues[2] += 0.5;
-			
-			rgbValues[0] = (int) (matrixValues[0][0] * YCbCrValues[0] + matrixValues[0][1] * YCbCrValues[1] + matrixValues[0][2] * YCbCrValues[2]);
-			rgbValues[1] = (int) (matrixValues[1][0] * YCbCrValues[0] + matrixValues[1][1] * YCbCrValues[1] + matrixValues[1][2] * YCbCrValues[2]);
-			rgbValues[2] = (int) (matrixValues[2][0] * YCbCrValues[0] + matrixValues[2][1] * YCbCrValues[1] + matrixValues[2][2] * YCbCrValues[2]);
-			
-			
-			if(rgbValues[0] > 255) rgbValues[0]=255;
-			if(rgbValues[1] > 255) rgbValues[1]=255;
-			if(rgbValues[2] > 255) rgbValues[2]=255;
-			if(rgbValues[0] < 0) rgbValues[0]=0;
-			if(rgbValues[1] < 0) rgbValues[1]=0;
-			if(rgbValues[2] < 0) rgbValues[2]=0;
-			
-			
-			
-			return rgbValues;
-		}  // calculateSupersample ends
 		
 		
 		/**
