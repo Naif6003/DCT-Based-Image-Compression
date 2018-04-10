@@ -1,6 +1,8 @@
+import java.util.Scanner;
+
 public class DCT {
 	
-	
+	static int n = 0;
 	public static void main(String[] args) {
 		
 		double[][] a = { {139,144,149,153,155,155,155,155},
@@ -22,20 +24,15 @@ public class DCT {
           System.out.println();
         }	        
 	        // perform Discrete Cosine Transform. 
-		  //  GFG.dctTransform(a);
+		    GFG.dctTransform(a);
 	        
 	}
 
 	
-	public static class GFG {
+static class GFG {
 		
 	    public static int n = 8,m = 8;
-	    
-	    /**
-	     * a is the 2D array of pixels to perform DCT on 
-	     * @param a
-	     */
-	    static float[][] dctTransform(float a[][]){
+	    static double[][] dctTransform(double a[][]){
 	        int i, j, u, v;
 	  
 	        for(int x=0;x<8;x++) {
@@ -44,7 +41,7 @@ public class DCT {
 	        	  }
 	        }
 	        
-	        float[][] b = new float[m][n];
+	        double[][] b = new double[m][n];
 	  
 	        double ci, cj, dct1, sum;
 	  
@@ -69,12 +66,11 @@ public class DCT {
 	                        sum = sum + dct1;
 	                    }
 	                }
-	                b[i][j] = (float) (ci * cj * sum);
-
+	                b[i][j] = ci * cj * sum;
 	            }
 	        }
 	  
-//	        System.out.println("\nDCT applied to A 2-D array and get B: ");
+//	        System.out.println("\nDCT applied to 2-D array B: ");
 //	        System.out.println("-----------");
 //	        for (i = 0; i < m; i++) {
 //	            for (j = 0; j < n; j++) {
@@ -82,35 +78,34 @@ public class DCT {
 //	        }
 //	          System.out.println();
 //	        }
-	        
-	        
-	        
+//	        
 	     // applies the inverse Discrete Cosine Transform to 2-D array B
-	        // inverseDCT(b);
+	  //  idct(b);    
+	        
 	        return b;
 	    }
 	    
 	    
 	    static int N = 8;
-	    static float[] initializeCoefficients() {
-	    	float[] c = new float[8];
+	    static double[] initializeCoefficients() {
+	    	double[] c = new double[8];
 	    	for (int i=1;i<N;i++) {
 	            c[i]=1;
 	        }
-	        c[0]=(float) (1/Math.sqrt(2.0));
+	        c[0]=1/Math.sqrt(2.0);
 	        return c;
 	    }
 	    
-	    static float[][] inverseDCT(float[][] b) {
+	    static double[][] idct(double[][] b) {
 	   
-	    	float[] c = new float[N];
+	    	double[] c = new double[N];
 	    	c = initializeCoefficients();
 	    	//double ci,cj,sum;
-	    	float[][] a = new float[N][N];
+	    	double[][] a = new double[N][N];
 	    	
 	        for (int i=0;i<N;i++) {
 	          for (int j=0;j<N;j++) {
-	        	  	float sum = (float) 0.0;
+	        	  	double sum = 0.0;
 	            for (int u=0;u<N;u++) {
 	              for (int v=0;v<N;v++) {
 //	            	  sum += ci * cj * b[u][v]
@@ -130,7 +125,7 @@ public class DCT {
 	        	}
 	    }
 	        
-//	    System.out.println("\nIDCT applied to B array and get C: ");
+//	    System.out.println("\nIDCT applied to 2-D array C: ");
 //	    System.out.println("-----------");
 //	    for (int i = 0; i < m; i++) {
 //            for (int j = 0; j < n; j++) {
@@ -138,15 +133,15 @@ public class DCT {
 //        }
 //          System.out.println();
 //        }
+////	    
+//	    } // function ends	    
 	    
-	    	return a;
-	    } // function ends	    
-	    
-	    
-	    
-	    
+	    return a;
 	    
 	}
+	    
+	   
+	    
 }
 
-
+}
